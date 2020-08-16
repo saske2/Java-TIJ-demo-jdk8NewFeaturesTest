@@ -1,0 +1,72 @@
+package cd.demo.hystrixTests;
+
+import cd.demo.hystrixTests.simulationOfNics.CdA0991A002Adaptor;
+import cd.demo.hystrixTests.simulationOfNics.FullSimuAuthEntity;
+import com.atguigu.bean.Car;
+import com.atguigu.bean.Person;
+import org.junit.Test;
+
+import java.math.BigDecimal;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
+
+/**
+ * @ClassName: cd.demo.hystrixTests.hystrixbasicTest.class
+ * @UserAndTime: saske2-2020/8/15-12:53
+ * @Descript: xxxxx
+ * @Reference: {@link}
+ **/
+public class hystrixbasicTest {
+
+    public static Consumer<FullSimuAuthEntity> consumer = new CdA0991A002Adaptor();
+
+    @Test
+    public void paralleToTest(){
+        FullSimuAuthEntity p1 = new FullSimuAuthEntity();
+        p1.setSystxcode("A02810552");
+        p1.setCrcrdCardno("6258123456781234");
+        p1.setAuthTxAmt(new BigDecimal("2.45"));
+        p1.setAccentryDate("20200814");
+        try {
+            consumer.accept(p1);
+        }catch (Throwable e){
+            e.printStackTrace();
+            throw new RuntimeException("getFutureError_Ocurr!throw in Main1");
+        }
+        System.out.println("in_main_thread");
+
+        //模拟其他处理的处理耗时
+        try {
+            otheradptorProcess(1);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        System.out.println("otherprocess_Over");
+
+        //阻塞获取异步方法的结果，can't catch asynchronize thread's exceptions..
+        Object outboundvo = null;
+        try {
+            outboundvo = p1.getAsynOutboundFuture().get();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } catch (ExecutionException e) {
+            e.printStackTrace();
+        } catch (Throwable e){
+            e.printStackTrace();
+            throw new RuntimeException("getFutureError_Ocurr!throw in Main2");
+        }
+        System.out.println("getFuture_Over");
+        //在hystrix的异步方法中，只有这个判断outboundvo是否为空的方式来进行主进程的中断
+        //否则hystrix起来的异步线程异常情况下，主线程并没有办法进行捕获和中断
+        if(outboundvo==null)
+            throw new RuntimeException("getFutureError_Ocurr!throw in Main3_nullOutboundvo");
+        System.out.println("print_get_result");
+        System.out.println(outboundvo);
+    }
+
+    //模拟其他处理的处理耗时
+    private void otheradptorProcess(long timeout) throws InterruptedException {
+        TimeUnit.MILLISECONDS.sleep(timeout);
+    }
+}
