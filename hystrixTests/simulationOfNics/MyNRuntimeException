@@ -1,0 +1,14 @@
+package cd.demo.hystrixTests.simulationOfNics;
+
+/**
+ * @ClassName: cd.demo.hystrixTests.simulationOfNics.MyNRuntimeException.class
+ * @UserAndTime: saske2-2020/8/15-17:25
+ * @Descript: xxxxx
+ * @Reference: {@link}
+ **/
+public class MyNRuntimeException extends RuntimeException {
+    public MyNRuntimeException(String message) {
+        super(message);
+    }
+
+}
